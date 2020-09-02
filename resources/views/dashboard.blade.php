@@ -23,7 +23,7 @@
                         <div class="dashboard-post">
                             @if( $post->thumbnail )
                                 <div class="dashboard-post__image">
-                                    <img src="{{ asset(Storage::url($post->thumbnail->path)) }}" alt="{{$post->title}}">
+                                    <img src="{{ asset(Storage::url($post->thumbnail->path)) }}" alt="{{$post->title}}" class="img-fluid">
                                 </div>
                             @endif
                             <h3 class="dashboard-post__title">{{$post->title}}</h3>
@@ -31,12 +31,12 @@
                             @if( $post->tags )
                                 <div class="dashboard-post__tags">
                                     @foreach($post->tags as $tag)
-                                        <a href="{{route('tags.show', ['tag' => $tag->id])}}" class="dashboard-post__tag">{{$tag->name}}</a>
+                                        <a href="{{route('tags.show', ['tag' => $tag->slug])}}" class="dashboard-post__tag">{{$tag->name}}</a>
                                     @endforeach
                                 </div>
                             @endif
                             <div class="dashboard-post__actions">
-                                <a href="{{route('posts.show', ['post' => $post->id])}}" class="btn btn-primary dashboard-post__action">{{ __('Read more') }}</a>
+                                <a href="{{route('posts.show', ['post' => $post->slug])}}" class="btn btn-primary dashboard-post__action">{{ __('Read more') }}</a>
                             </div>
                             <div class="dashboard-post__footer">
                                 Posted on: {{$post->created_at}}

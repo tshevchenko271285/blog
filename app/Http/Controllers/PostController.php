@@ -85,7 +85,8 @@ class PostController extends Controller
      */
     public function show($id)
     {
-        $post = Post::with('thumbnail')->find($id);
+//        $post = Post::with('thumbnail')->find($id);
+        $post = Post::with('thumbnail')->where('slug', $id)->first();
         return view('posts.post', ['post' => $post]);
     }
 

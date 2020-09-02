@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Tag;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class TagController extends Controller
 {
@@ -39,8 +40,8 @@ class TagController extends Controller
         $request->validate([
             'name' => ['required', 'unique:tags'],
         ]);
-
-        Tag::create(['name' => $request->input('name')]);
+        $name = $request->input('name');
+        Tag::create(['name' => $name, 'slug' => Str::slug($name)]);
 
         return redirect()->route('tags.index');
     }
@@ -53,7 +54,9 @@ class TagController extends Controller
      */
     public function show($id)
     {
-        $tag = Tag::with('posts')->find($id);
+        $tag = Tag::with(array('posts' => function($query){
+            $query->orderBy('id', 'DESC');
+        }))->where('slug', $id)->first();
         return view('dashboard', ['posts' => $tag->posts]);
     }
 
@@ -82,7 +85,9 @@ class TagController extends Controller
             'name' => ['required', 'unique:tags,name,'.$id],
         ]);
         $tag = Tag::find($id);
-        $tag->name = $request->input('name');
+        $name = $request->input('name');
+        $tag->name = $name;
+        $tag->slug = Str::slug($name);
         $tag->save();
 
 //        return redirect()->route('tags.edit', ['tag' => $id]);

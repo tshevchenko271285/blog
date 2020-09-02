@@ -40,13 +40,18 @@
                         </span>
                     @enderror
                 </div>
-
                 @if( $tags && count( $tags ) )
                     <div class="row">
                         @foreach( $tags as $tag )
                             <div class="col-3">
                                 <div class="form-group">
-                                    <input type="checkbox" name="tags[]" value="{{ $tag->id }}" id="tag_{{$tag->id}}">
+                                    <input
+                                        type="checkbox"
+                                        name="tags[{{$loop->index}}]"
+                                        value="{{ $tag->id }}"
+                                        id="tag_{{$tag->id}}"
+                                        {{ ( old('tags.'.$loop->index) ) ? 'checked' : ''}}
+                                    >
                                     <label for="tag_{{$tag->id}}">{{$tag->name}}</label>
                                 </div>
                             </div>

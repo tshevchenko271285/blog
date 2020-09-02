@@ -68,10 +68,10 @@ class PostController extends Controller
         $post = Post::create($post_data);
 
         $tags_id = $request->input('tags');
-        $tags = Tag::whereIn('id', $tags_id)->get();
-        $post->tags()->attach($tags);
-
-
+        if( $tags_id ) {
+            $tags = Tag::whereIn('id', $tags_id)->get();
+            $post->tags()->attach($tags);
+        }
 //        return redirect()->route('posts.show', $post->id);
         return redirect('dashboard');
 

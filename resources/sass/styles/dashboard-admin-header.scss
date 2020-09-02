@@ -1,0 +1,11 @@
+.dashboard-admin-header {
+    &__menu {
+        padding: 30px;
+        &-item {
+            margin-right: 10px;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+}

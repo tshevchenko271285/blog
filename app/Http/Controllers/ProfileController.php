@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateProfile;
 use App\Repositories\Contracts\IAttachmentRepo;
 use App\Repositories\Contracts\IProfileRepo;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -45,24 +45,10 @@ class ProfileController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request)
+    public function update(UpdateProfile $request)
     {
-        $user_id = Auth::id();
-
-        $rules = [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user_id]
-        ];
-        if( $request->input('password') ) {
-            $rules['password'] = ['required', 'string', 'min:8', 'confirmed'];
-        }
-        if( $request->file('avatar') ) {
-            $rules['avatar'] = ['image'];
-        }
-        $request->validate($rules);
-
         $user_data = [
-            'id' => $user_id,
+            'id' => Auth::id(),
             'name' => $request->input('name'),
             'email' => $request->input('email'),
             'lastname' => $request->input('lastname'),

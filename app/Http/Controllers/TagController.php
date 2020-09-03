@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreTag;
+use App\Http\Requests\UpdateTag;
 use App\Repositories\Contracts\ITagRepo;
-use Illuminate\Http\Request;
 
 class TagController extends Controller
 {
@@ -41,12 +42,8 @@ class TagController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StoreTag $request)
     {
-        $request->validate([
-            'name' => ['required', 'unique:tags'],
-        ]);
-
         $this->tag_repo->create($request->input('name'));
 
         return redirect()->route('tags.index');
@@ -82,12 +79,8 @@ class TagController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UpdateTag $request, $id)
     {
-        $request->validate([
-            'name' => ['required', 'unique:tags,name,'.$id],
-        ]);
-
         $this->tag_repo->updateNameById($id, $request->input('name'));
 
         return redirect()->route('tags.index');

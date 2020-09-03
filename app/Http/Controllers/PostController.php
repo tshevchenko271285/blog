@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePost;
 use App\Repositories\Contracts\IAttachmentRepo;
 use App\Repositories\Contracts\IPostRepo;
 use App\Repositories\Contracts\ITagRepo;
@@ -49,26 +50,13 @@ class PostController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
+     * @param StorePost $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function store(Request $request)
+    public function store(StorePost $request)
     {
-
-        $rules = [
-            'title' => 'required|unique:posts|max:255',
-            'description' => 'required|max:255',
-        ];
-
-        // Adding to rules the thumbnail if exist
-        if( $request->file('thumbnail') ) {
-            $rules['thumbnail'] = 'image';
-        }
-
         // Validation
-        $request->validate($rules);
+//        $request->validated();
 
         // Fill with data
         $post_data = [

@@ -6,21 +6,38 @@ use App\Repositories\Contracts\IPostRepo;
 use Illuminate\Support\Str;
 
 class PostRepo implements IPostRepo {
-
+    /**
+     * @var Post
+     */
     protected $model;
 
+    /**
+     * PostRepo constructor.
+     * @param Post $model
+     */
     public function __construct(Post $model) {
         $this->model = $model;
     }
 
+    /**
+     * @return mixed
+     */
     public function all() {
         return $this->model::orderBy('id', 'desc')->with('thumbnail')->get();
     }
 
+    /**
+     * @param string $slug
+     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Model
+     */
     public function getPostBySlug(string $slug) {
         return $this->model::with('thumbnail')->where('slug', $slug)->firstOrFail();
     }
 
+    /**
+     * @param array $post_data
+     * @return mixed
+     */
     public function create(array $post_data) {
         $tags = [];
         if( isset( $post_data['tags'] ) && is_array($post_data['tags']) ) {
@@ -38,10 +55,5 @@ class PostRepo implements IPostRepo {
 
         return $post;
     }
-
-//    public function saveAttachment(Post $post, Attachment $attachment) {
-//        $post->thumbnail_id = $attachment->id;
-//        $post->save();
-//    }
 
 }

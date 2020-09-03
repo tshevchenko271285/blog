@@ -31,7 +31,7 @@
                             @if( $post->tags )
                                 <div class="dashboard-post__tags">
                                     @foreach($post->tags as $tag)
-                                        <a href="{{route('tags.show', ['tag' => $tag->slug])}}" class="dashboard-post__tag">{{$tag->name}}</a>
+                                        <a href="{{route('posts.bytag', ['tag' => $tag->slug])}}" class="dashboard-post__tag">{{$tag->name}}</a>
                                     @endforeach
                                 </div>
                             @endif

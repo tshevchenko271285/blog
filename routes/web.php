@@ -20,9 +20,9 @@ use Symfony\Component\HttpFoundation\Request;
 
 Auth::routes();
 
-Route::get('/', 'HomeController@index')->name('home');
-Route::get('/dashboard', 'HomeController@index')->name('dashboard');
-
+Route::get('/', 'PostController@index')->name('home');
+Route::get('/dashboard', 'PostController@index')->name('dashboard');
+Route::get('/posts/tag/{tag}', 'PostController@showPostsByTag')->name('posts.bytag');
 Route::resource('posts', 'PostController');
 
 Route::resource('tags', 'TagController');

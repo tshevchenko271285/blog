@@ -2,17 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Attachment;
-use App\User;
+use App\Repositories\Contracts\IAttachmentRepo;
+use App\Repositories\Contracts\IProfileRepo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
 {
+    protected $profile_repo;
 
-    public function __construct() {
+    protected $attachment_repo;
+
+    public function __construct(IProfileRepo $profile_repo, IAttachmentRepo $attachment_repo) {
+
         $this->middleware('auth');
+
+        $this->profile_repo = $profile_repo;
+
+        $this->attachment_repo = $attachment_repo;
+
     }
 
     /**
@@ -22,9 +31,11 @@ class ProfileController extends Controller
      */
     public function index()
     {
-        $user = User::with('avatar')->find( Auth::id() );
-//        dd($user);
+
+        $user = $this->profile_repo->getForUserId(Auth::id());
+
         return view('profile', ['user' => $user]);
+
     }
 
     /**
@@ -37,7 +48,7 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $user_id = Auth::id();
-        $user = User::find($user_id);
+
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user_id]
@@ -50,19 +61,26 @@ class ProfileController extends Controller
         }
         $request->validate($rules);
 
-        $user->name = $request->input('name');
-        $user->email = $request->input('email');
-        $user->lastname = $request->input('lastname');
-        $user->firstname = $request->input('firstname');
-        $user->password = Hash::make($request->input('password'));
-        if( $request->file('avatar') ) {
-            $path = $request->file('avatar')->store('public/avatars');
-            $attachment = new Attachment(['path' => $path]);
-            $attachment->save();
-            $user->avatar_id = $attachment->id;
+        $user_data = [
+            'id' => $user_id,
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'lastname' => $request->input('lastname'),
+            'firstname' => $request->input('firstname'),
+        ];
+
+        if( $request->input('password') ) {
+            $user_data['password'] = Hash::make($request->input('password'));
         }
 
-        $user->save();
+        if( $request->file('avatar') ) {
+            $path = $request->file('avatar')->store('public/avatars');
+            $attachment = $this->attachment_repo->create($path);
+            $user_data['avatar_id'] = $attachment->id;
+        }
+
+        $this->profile_repo->update($user_data);
+
         return redirect()->route('profile.index');
     }
 

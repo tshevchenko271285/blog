@@ -2,18 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Attachment;
-use App\Post;
-use App\Tag;
+use App\Repositories\Contracts\IAttachmentRepo;
+use App\Repositories\Contracts\IPostRepo;
+use App\Repositories\Contracts\ITagRepo;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
+    protected $post_repo;
+    protected $tag_repo;
+    protected $attachment_repo;
 
-    function __construct() {
-        $this->middleware('auth')->only( ['create', 'store', 'edit', 'update', 'destroy'] );
+    function __construct( IPostRepo $post_repo, ITagRepo $tag_repo, IAttachmentRepo $attachment_repo ) {
+
+        $this->middleware('auth')->except( ['index', 'show', 'showPostsByTag'] );
+
+        $this->post_repo = $post_repo;
+        $this->tag_repo = $tag_repo;
+        $this->attachment_repo = $attachment_repo;
+
     }
+
     /**
      * Display a listing of the resource.
      *
@@ -21,7 +30,7 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::orderBy('id', 'desc')->with('thumbnail')->get();
+        $posts = $this->post_repo->all();
         return view('dashboard', ['posts' => $posts]);
     }
 
@@ -32,47 +41,57 @@ class PostController extends Controller
      */
     public function create()
     {
-        $tags = Tag::all();
+
+        $tags = $this->tag_repo->all();
+
         return view('posts.create-post', ['tags' => $tags]);
+
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
+
         $rules = [
             'title' => 'required|unique:posts|max:255',
             'description' => 'required|max:255',
         ];
 
+        // Adding to rules the thumbnail if exist
         if( $request->file('thumbnail') ) {
             $rules['thumbnail'] = 'image';
         }
 
+        // Validation
         $request->validate($rules);
+
+        // Fill with data
         $post_data = [
-            'slug' => Str::slug($request->input('title')),
             'title' => $request->input('title'),
             'description' => $request->input('description')
         ];
+
+        // Create Thumbnail if exist
         if( $request->file('thumbnail') ) {
             $path = $request->file('thumbnail')->store('public/posts');
-            $attachment = new Attachment(['path' => $path]);
-            $attachment->save();
+            $attachment = $this->attachment_repo->create($path);
             $post_data['thumbnail_id'] = $attachment->id;
         }
-        $post = Post::create($post_data);
 
+        // Get Tags if exist
         $tags_id = $request->input('tags');
         if( $tags_id ) {
-            $tags = Tag::whereIn('id', $tags_id)->get();
-            $post->tags()->attach($tags);
+            $post_data['tags'] = $this->tag_repo->getByIds($tags_id);
         }
-//        return redirect()->route('posts.show', $post->id);
+
+        // Create Post
+        $this->post_repo->create($post_data);
+
         return redirect('dashboard');
 
     }
@@ -80,14 +99,16 @@ class PostController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param $slug
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($slug)
     {
-//        $post = Post::with('thumbnail')->find($id);
-        $post = Post::with('thumbnail')->where('slug', $id)->first();
+
+        $post = $this->post_repo->getPostBySlug($slug);
+
         return view('posts.post', ['post' => $post]);
+
     }
 
     /**
@@ -123,4 +144,13 @@ class PostController extends Controller
     {
         //
     }
+
+    public function showPostsByTag($slug) {
+
+        $tag = $this->tag_repo->getTagBySlugWithPosts($slug);
+
+        return view('dashboard', ['posts' => $tag->posts]);
+
+    }
+
 }

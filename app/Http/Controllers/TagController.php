@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Tag;
+use App\Repositories\Contracts\ITagRepo;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class TagController extends Controller
 {
+    protected $tag_repo;
+
+    function __construct( ITagRepo $tag_repo ) {
+        $this->middleware('auth')->except( ['show'] );
+        $this->tag_repo = $tag_repo;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -15,7 +21,7 @@ class TagController extends Controller
      */
     public function index()
     {
-        $tags = Tag::all();
+        $tags = $this->tag_repo->all();
         return view('tags.index', ['tags' => $tags]);
     }
 
@@ -40,8 +46,8 @@ class TagController extends Controller
         $request->validate([
             'name' => ['required', 'unique:tags'],
         ]);
-        $name = $request->input('name');
-        Tag::create(['name' => $name, 'slug' => Str::slug($name)]);
+
+        $this->tag_repo->create($request->input('name'));
 
         return redirect()->route('tags.index');
     }
@@ -54,10 +60,7 @@ class TagController extends Controller
      */
     public function show($id)
     {
-        $tag = Tag::with(array('posts' => function($query){
-            $query->orderBy('id', 'DESC');
-        }))->where('slug', $id)->first();
-        return view('dashboard', ['posts' => $tag->posts]);
+        //
     }
 
     /**
@@ -68,7 +71,7 @@ class TagController extends Controller
      */
     public function edit($id)
     {
-        $tag = Tag::with('posts')->find( $id );
+        $tag = $this->tag_repo->getById($id);
         return view('tags.edit', ['tag' => $tag]);
     }
 
@@ -84,13 +87,9 @@ class TagController extends Controller
         $request->validate([
             'name' => ['required', 'unique:tags,name,'.$id],
         ]);
-        $tag = Tag::find($id);
-        $name = $request->input('name');
-        $tag->name = $name;
-        $tag->slug = Str::slug($name);
-        $tag->save();
 
-//        return redirect()->route('tags.edit', ['tag' => $id]);
+        $this->tag_repo->updateNameById($id, $request->input('name'));
+
         return redirect()->route('tags.index');
     }
 

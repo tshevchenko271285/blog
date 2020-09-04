@@ -3,25 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateProfile;
-use App\Repositories\Contracts\IAttachmentRepo;
-use App\Repositories\Contracts\IProfileRepo;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use App\Services\Contracts\IProfileService;
 
 class ProfileController extends Controller
 {
-    protected $profile_repo;
 
-    protected $attachment_repo;
+    protected $profileService;
 
-    public function __construct(IProfileRepo $profile_repo, IAttachmentRepo $attachment_repo) {
-
+    public function __construct(IProfileService $profileService)
+    {
         $this->middleware('auth');
-
-        $this->profile_repo = $profile_repo;
-
-        $this->attachment_repo = $attachment_repo;
-
+        $this->profileService = $profileService;
     }
 
     /**
@@ -31,11 +23,8 @@ class ProfileController extends Controller
      */
     public function index()
     {
-
-        $user = $this->profile_repo->getForUserId(Auth::id());
-
+        $user = $this->profileService->getCurrentUser();
         return view('profile', ['user' => $user]);
-
     }
 
     /**
@@ -47,26 +36,7 @@ class ProfileController extends Controller
      */
     public function update(UpdateProfile $request)
     {
-        $user_data = [
-            'id' => Auth::id(),
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-            'lastname' => $request->input('lastname'),
-            'firstname' => $request->input('firstname'),
-        ];
-
-        if( $request->input('password') ) {
-            $user_data['password'] = Hash::make($request->input('password'));
-        }
-
-        if( $request->file('avatar') ) {
-            $path = $request->file('avatar')->store('public/avatars');
-            $attachment = $this->attachment_repo->create($path);
-            $user_data['avatar_id'] = $attachment->id;
-        }
-
-        $this->profile_repo->update($user_data);
-
+        $this->profileService->update($request);
         return redirect()->route('profile.index');
     }
 

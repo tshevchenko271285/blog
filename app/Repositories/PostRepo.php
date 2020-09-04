@@ -3,7 +3,7 @@ namespace App\Repositories;
 
 use App\Post;
 use App\Repositories\Contracts\IPostRepo;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Collection;
 
 class PostRepo implements IPostRepo {
     /**
@@ -39,21 +39,15 @@ class PostRepo implements IPostRepo {
      * @return mixed
      */
     public function create(array $post_data) {
-        $tags = [];
-        if( isset( $post_data['tags'] ) && is_array($post_data['tags']) ) {
-            $tags = $post_data['tags'];
-            unset($post_data['tags']);
-        }
+        return $this->model::create($post_data);
+    }
 
-        $post_data['slug'] = Str::slug($post_data['title']);
-
-        $post = $this->model::create($post_data);
-
-        if( count( $tags ) ) {
-            $post->tags()->attach($tags);
-        }
-
-        return $post;
+    /**
+     * @param Post $post
+     * @param Collection $tags
+     */
+    public function attachTags(Post $post, Collection $tags) {
+        $post->tags()->attach($tags);
     }
 
 }

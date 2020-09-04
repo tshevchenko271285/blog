@@ -1,5 +1,6 @@
 <?php
 namespace App\Repositories;
+
 use App\Repositories\Contracts\IProfileRepo;
 use App\User;
 
@@ -27,20 +28,12 @@ class ProfileRepo implements IProfileRepo {
     }
 
     /**
+     * @param int $user_id
      * @param array $user_data
      * @return mixed
      */
-    public function update(array $user_data) {
-
-        if( ! isset($user_data['id']) || empty($user_data['id']) ) throw new Exception('No user_id for profile update!');
-
-        $user = $this->model->find( $user_data['id'] );
-
-        unset($user_data['id']);
-
-        $user->update($user_data);
-
-        return $user;
+    public function update(int $user_id, array $user_data) {
+        return $this->model->find( $user_id )->update($user_data);
     }
 
 }

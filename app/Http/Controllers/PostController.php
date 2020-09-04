@@ -3,24 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePost;
-use App\Repositories\Contracts\IAttachmentRepo;
-use App\Repositories\Contracts\IPostRepo;
-use App\Repositories\Contracts\ITagRepo;
+use App\Services\Contracts\IPostService;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
-    protected $post_repo;
-    protected $tag_repo;
-    protected $attachment_repo;
+    /**
+     * @var IPostService
+     */
+    protected $postService;
 
-    function __construct( IPostRepo $post_repo, ITagRepo $tag_repo, IAttachmentRepo $attachment_repo ) {
+    function __construct( IPostService $postService ) {
 
         $this->middleware('auth')->except( ['index', 'show', 'showPostsByTag'] );
 
-        $this->post_repo = $post_repo;
-        $this->tag_repo = $tag_repo;
-        $this->attachment_repo = $attachment_repo;
+        $this->postService = $postService;
 
     }
 
@@ -31,8 +28,7 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = $this->post_repo->all();
-        return view('dashboard', ['posts' => $posts]);
+        return view('dashboard', ['posts' => $this->postService->all()]);
     }
 
     /**
@@ -42,11 +38,7 @@ class PostController extends Controller
      */
     public function create()
     {
-
-        $tags = $this->tag_repo->all();
-
-        return view('posts.create-post', ['tags' => $tags]);
-
+        return view('posts.create-post', ['tags' => $this->postService->getTags()]);
     }
 
     /**
@@ -55,33 +47,8 @@ class PostController extends Controller
      */
     public function store(StorePost $request)
     {
-        // Validation
-//        $request->validated();
-
-        // Fill with data
-        $post_data = [
-            'title' => $request->input('title'),
-            'description' => $request->input('description')
-        ];
-
-        // Create Thumbnail if exist
-        if( $request->file('thumbnail') ) {
-            $path = $request->file('thumbnail')->store('public/posts');
-            $attachment = $this->attachment_repo->create($path);
-            $post_data['thumbnail_id'] = $attachment->id;
-        }
-
-        // Get Tags if exist
-        $tags_id = $request->input('tags');
-        if( $tags_id ) {
-            $post_data['tags'] = $this->tag_repo->getByIds($tags_id);
-        }
-
-        // Create Post
-        $this->post_repo->create($post_data);
-
+        $this->postService->store($request);
         return redirect('dashboard');
-
     }
 
     /**
@@ -92,11 +59,7 @@ class PostController extends Controller
      */
     public function show($slug)
     {
-
-        $post = $this->post_repo->getPostBySlug($slug);
-
-        return view('posts.post', ['post' => $post]);
-
+        return view('posts.post', ['post' => $this->postService->getPostBySlug($slug)]);
     }
 
     /**
@@ -133,12 +96,11 @@ class PostController extends Controller
         //
     }
 
+    /**
+     * @param $slug
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
     public function showPostsByTag($slug) {
-
-        $tag = $this->tag_repo->getTagBySlugWithPosts($slug);
-
-        return view('dashboard', ['posts' => $tag->posts]);
-
+        return view('dashboard', ['posts' => $this->postService->getPostsByTagSlug($slug)]);
     }
-
 }

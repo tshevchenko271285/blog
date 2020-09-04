@@ -48,11 +48,9 @@ class TagRepo implements ITagRepo {
      * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Model
      */
     public function getTagBySlugWithPosts($slug) {
-        $tag = Tag::with(array('posts' => function($query){
+        return Tag::with(array('posts' => function($query){
             $query->orderBy('id', 'DESC');
         }))->where('slug', $slug)->firstOrFail();
-
-        return $tag;
     }
 
     /**

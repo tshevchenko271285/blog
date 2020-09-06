@@ -4,15 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTag;
 use App\Http\Requests\UpdateTag;
-use App\Repositories\Contracts\ITagRepo;
+use App\Services\Contracts\ITagService;
 
 class TagController extends Controller
 {
-    protected $tag_repo;
+    /**
+     * @var ITagService
+     */
+    private $tagService;
 
-    function __construct( ITagRepo $tag_repo ) {
+    function __construct( ITagService $tagService ) {
         $this->middleware('auth')->except( ['show'] );
-        $this->tag_repo = $tag_repo;
+        $this->tagService = $tagService;
     }
 
     /**
@@ -22,8 +25,7 @@ class TagController extends Controller
      */
     public function index()
     {
-        $tags = $this->tag_repo->all();
-        return view('tags.index', ['tags' => $tags]);
+        return view('tags.index', ['tags' => $this->tagService->all()]);
     }
 
     /**
@@ -37,15 +39,12 @@ class TagController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param StoreTag $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(StoreTag $request)
     {
-        $this->tag_repo->create($request->input('name'));
-
+        $this->tagService->create($request);
         return redirect()->route('tags.index');
     }
 
@@ -68,8 +67,7 @@ class TagController extends Controller
      */
     public function edit($id)
     {
-        $tag = $this->tag_repo->getById($id);
-        return view('tags.edit', ['tag' => $tag]);
+        return view('tags.edit', ['tag' => $this->tagService->getById($id)]);
     }
 
     /**
@@ -81,8 +79,7 @@ class TagController extends Controller
      */
     public function update(UpdateTag $request, $id)
     {
-        $this->tag_repo->updateNameById($id, $request->input('name'));
-
+        $this->tagService->updateNameById($id, $request);
         return redirect()->route('tags.index');
     }
 

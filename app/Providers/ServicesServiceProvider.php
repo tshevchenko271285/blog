@@ -31,5 +31,9 @@ class ServicesServiceProvider extends ServiceProvider
             'App\Services\Contracts\IPostService',
             'App\Services\PostService'
         );
+        $this->app->bind(
+            'App\Services\Contracts\ITagService',
+            'App\Services\TagService'
+        );
     }
 }

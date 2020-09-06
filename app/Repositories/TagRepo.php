@@ -3,7 +3,6 @@ namespace App\Repositories;
 
 use App\Repositories\Contracts\ITagRepo;
 use App\Tag;
-use Illuminate\Support\Str;
 
 class TagRepo implements ITagRepo {
 
@@ -28,11 +27,11 @@ class TagRepo implements ITagRepo {
     }
 
     /**
-     * @param $tag_id
+     * @param $id
      * @return mixed
      */
-    public function getById($tag_id) {
-        return $this->model->find($tag_id);
+    public function getById(int $id) {
+        return $this->model->find($id);
     }
 
     /**
@@ -48,33 +47,25 @@ class TagRepo implements ITagRepo {
      * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Model
      */
     public function getTagBySlugWithPosts($slug) {
-        return Tag::with(array('posts' => function($query){
+        return $this->model::with(array('posts' => function($query){
             $query->orderBy('id', 'DESC');
         }))->where('slug', $slug)->firstOrFail();
     }
 
     /**
-     * @param string $name
+     * @param array $tag_data
      * @return mixed
      */
-    public function create(string $name) {
-        $tag_data = [
-            'name' => $name,
-            'slug' => Str::slug($name)
-        ];
+    public function create(array $tag_data) {
         return $this->model->create($tag_data);
     }
 
     /**
-     * @param $id
-     * @param $name
+     * @param int $id
+     * @param array $data
      * @return mixed
      */
-    public function updateNameById($id, $name) {
-        $tag = $this->model->find($id);
-        $tag->name = $name;
-        $tag->slug = Str::slug($name);
-        $tag->save();
-        return $tag;
+    public function updateNameById(int $id, array $data) {
+        return $this->model->find($id)->update($data);
     }
 }

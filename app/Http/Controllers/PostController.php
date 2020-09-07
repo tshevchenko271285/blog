@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePost;
+use App\Http\Requests\UpdatePost;
 use App\Services\Contracts\IPostService;
-use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
@@ -13,12 +13,13 @@ class PostController extends Controller
      */
     protected $postService;
 
+    /**
+     * PostController constructor.
+     * @param IPostService $postService
+     */
     function __construct( IPostService $postService ) {
-
         $this->middleware('auth')->except( ['index', 'show', 'showPostsByTag'] );
-
         $this->postService = $postService;
-
     }
 
     /**
@@ -65,24 +66,25 @@ class PostController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  int  $slug
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit($slug)
     {
-        //
+        return view('posts.edit-post', $this->postService->getDataEditPostBySlug($slug));
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UpdatePost $request, $id)
     {
-
+        $this->postService->update($id, $request);
+        return redirect()->route('dashboard');
     }
 
     /**
@@ -93,14 +95,16 @@ class PostController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $this->postService->delete($id);
+        return redirect()->route('dashboard');
     }
 
     /**
      * @param $slug
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function showPostsByTag($slug) {
+    public function showPostsByTag($slug)
+    {
         return view('dashboard', ['posts' => $this->postService->getPostsByTagSlug($slug)]);
     }
 }

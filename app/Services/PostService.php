@@ -70,6 +70,26 @@ class PostService implements IPostService {
     }
 
     /**
+     * @param string $slug
+     * @return array
+     */
+    public function getDataEditPostBySlug(string $slug): array {
+        $post = $this->getPostBySlug($slug);
+        $tags = $this->getTags()->map(function($tag) use ($post){
+            $tag->checked = false;
+            $post->tags->first(function($post_tag) use ($tag){
+                if( $post_tag->id === $tag->id )
+                    $tag->checked = true;
+            });
+            return $tag;
+        });
+        return [
+            'post' => $post,
+            'tags' => $tags
+        ];
+    }
+
+    /**
      * @param Request $request
      */
     public function store(Request $request)
@@ -83,14 +103,68 @@ class PostService implements IPostService {
 
         // Create Thumbnail if exist
         if( $request->file('thumbnail') ) {
-            $path = $request->file('thumbnail')->store('public/posts');
-            $attachment = $this->attachmentRepo->create($path);
-            $post_data['thumbnail_id'] = $attachment->id;
+            $attachment = $this->saveThumbnailFile($request);
+            if( $attachment )
+                $post_data['thumbnail_id'] = $attachment->id;
         }
 
         // Create Post
         $post = $this->postRepo->create($post_data);
 
+        // Get Tags if exist
+        $this->attachTags($request, $post);
+    }
+
+    /**
+     * @param $id
+     * @param $request
+     */
+    public function update($id, $request)
+    {
+
+        $post = $this->postRepo->getPostById($id);
+
+        $data = [
+            'title' => $request->title,
+            'slug' => Str::slug($request->title),
+            'description' => $request->description
+        ];
+
+        if( $request->has('thumbnail') ) {
+            if( $post->thumbnail ) {
+                $this->attachmentRepo->removeById($post->thumbnail->id);
+            }
+            $attachment = $this->saveThumbnailFile($request);
+            if( $attachment ) {
+                $data['thumbnail_id'] = $attachment->id;
+            }
+        }
+
+        $this->postRepo->update($id, $data);
+        $this->attachTags($request, $post);
+    }
+
+    /**
+     * @param Request $request
+     * @return |null
+     */
+    protected function saveThumbnailFile(Request $request)
+    {
+        if( $request->file('thumbnail') ) {
+            $path = $request->file('thumbnail')->store('public/posts');
+            $attachment = $this->attachmentRepo->create($path);
+            return $attachment;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @param $post
+     */
+    protected function attachTags(Request $request, $post)
+    {
         // Get Tags if exist
         if( $request->has('tags') ) {
             $tags = $this->tagRepo->getByIds($request->input('tags'));
@@ -98,5 +172,13 @@ class PostService implements IPostService {
                 $this->postRepo->attachTags($post, $tags);
             }
         }
+    }
+
+    /**
+     * @param $id
+     * @return mixed
+     */
+    public function delete($id) {
+        return $this->postRepo->delete($id);
     }
 }

@@ -36,7 +36,8 @@
                                 </div>
                             @endif
                             <div class="dashboard-post__actions">
-                                <a href="{{route('posts.show', ['post' => $post->slug])}}" class="btn btn-primary dashboard-post__action">{{ __('Read more') }}</a>
+                                <a href="{{route('posts.show', ['post' => $post->slug])}}" class="btn btn-success dashboard-post__action dashboard-post__action--read">{{ __('Read more') }}</a>
+                                <a href="{{route('posts.edit', ['post' => $post->slug])}}" class="btn btn-primary dashboard-post__action dashboard-post__action--edit">{{ __('Edit post') }}</a>
                             </div>
                             <div class="dashboard-post__footer">
                                 Posted on: {{$post->created_at}}

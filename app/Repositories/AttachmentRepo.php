@@ -18,4 +18,7 @@ class AttachmentRepo implements IAttachmentRepo {
         return $attachment;
     }
 
+    public function removeById(int $id) {
+        $this->model->destroy($id);
+    }
 }

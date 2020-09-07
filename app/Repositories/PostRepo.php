@@ -31,7 +31,15 @@ class PostRepo implements IPostRepo {
      * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Model
      */
     public function getPostBySlug(string $slug) {
-        return $this->model::with('thumbnail')->where('slug', $slug)->firstOrFail();
+        return $this->model::with(['thumbnail', 'tags'])->where('slug', $slug)->firstOrFail();
+    }
+
+    /**
+     * @param int $id
+     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Model
+     */
+    public function getPostById(int $id) {
+        return $this->model::with(['thumbnail', 'tags'])->where('id', $id)->firstOrFail();
     }
 
     /**
@@ -47,7 +55,22 @@ class PostRepo implements IPostRepo {
      * @param Collection $tags
      */
     public function attachTags(Post $post, Collection $tags) {
-        $post->tags()->attach($tags);
+        $post->tags()->sync($tags);
     }
 
+    /**
+     * @param int $id
+     * @param array $data
+     */
+    public function update(int $id, array $data) {
+        $this->model->find($id)->update($data);
+    }
+
+    /**
+     * @param $id
+     * @return mixed
+     */
+    public function delete($id) {
+        return $this->model->find($id)->delete();
+    }
 }
